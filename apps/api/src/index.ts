@@ -10,7 +10,7 @@ app.get("/health", async (request, reply) => {
   } catch (err) {
     request.log.error(err, "Database health check failed");
     return reply.status(503).send({ status: "error", database: "down" });
-    }
+  }
 });
 
 app.addHook("onClose", async () => {
