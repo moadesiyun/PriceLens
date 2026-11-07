@@ -18,10 +18,11 @@ reviews it, and pricing analysts need to know which files they can trust before 
 
 ## In scope (Phase 1)
 
-- Import CMS v3.0.0 price files (CSV tall, CSV wide, JSON), streamed
-- Compare the 20 target services across hospitals (gross, cash, negotiated range)
-- Data-quality and compliance report per file, with a score
+- Import CMS v3.0.0 price files (CSV tall, CSV wide, JSON), streamed so multi-GB files use flat memory
+- Compare the 20 target services across loaded hospitals (gross, cash, negotiated range by payer)
+- Data-quality and compliance report per file, with a score and a plain-English explanation of each problem
 - Upload a file and see its report
+- Tested (unit, API, one end-to-end) and runs locally with one command (Docker Compose)
 
 ## Out of scope (Phase 1)
 
