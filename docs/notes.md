@@ -60,7 +60,7 @@ standard_charge|min / max; standard_charge|methodology
 - when the rate is a percentage/algorithm: allowed-amount fields filled
 - no zero/negative prices; min ≤ max; 10th ≤ median ≤ 90th
 
-## Sat Nov 7 — in progress
+## Sat Nov 7 — done (Week 1 complete)
 
 Missed Wed/Thu; caught up in Saturday's block.
 
@@ -69,11 +69,15 @@ Missed Wed/Thu; caught up in Saturday's block.
 - CMS v3.0.0 samples downloaded to `data/samples` (tall, wide, JSON); field list written above
 - `docs/spec.md`: problem, users, scope, data, 20 target services, similar tools, disclaimer
 - `pnpm format:check` and `pnpm build` pass
+- CI on every push: install, format:check, lint, build, test (green)
+- API: `buildApp()` in `app.ts`; `/health` tests with mocked DB (200 and 503)
+- Web: Vitest + jsdom + Testing Library; 2 tests on the starter page (rewrite in Week 7)
+- `pnpm check` runs everything CI runs; use before every push
 
 **Decisions**
 
 - **Primary user = hospital compliance / revenue-cycle analyst;** secondary = pricing/health
-  data analyst; patients out of scope. Why: matches the compliance angle and the healthcare
+  data analyst; patients out of scope in this phase. Why: matches the compliance angle and the healthcare
   data roles I'm targeting.
 - **PriceLens is a study project in a market that already exists** (CMS validator, Turquoise
   Health, PriceTransparency.io). Differentiate on engineering and clear explanations, not novelty.
@@ -84,4 +88,28 @@ Missed Wed/Thu; caught up in Saturday's block.
   for `tsc`. Why: typescript-eslint crashes on TS 7.0, which has no API until 7.1.
   Undo when typescript-eslint supports TS 7.1+ (track typescript-eslint issue #10940).
   Repeat in apps/api when ESLint is added there.
-- **Schedule:** Vitest + `/health` test moved to Sun (optional) or Mon Nov
+  Tests: mock DB for route logic; real Postgres in CI from Week 2. `app.inject()`, not Supertest
+- Test files excluded from the API build (CI was running them twice from `dist`)
+- Node 24.15+ required (`engines` + `.npmrc engine-strict`); laptop upgraded 22.13 → 24.22.2
+
+**Lessons**
+
+- Always check the newest CI run; old red runs stay in the list
+- Same code, different result on CI → suspect versions (Node, Prettier) first
+
+## Week 2 plan (Nov 9–15): data model and SQL
+
+Done when: schema migrated, 10 practice queries saved.
+
+- Mon: choose migration tool; first migration (hospitals, files)
+- Tue: services + charges tables (gross, cash, negotiated by payer/plan, allowed-amount stats);
+  seed the 20 target services from the spec
+- Wed (learn): SQL practice — joins, GROUP BY, window functions
+- Thu: Postgres service container in CI; run migrations there; ESLint for the API if time
+- Sat: 10 practice queries in `db/queries.sql`; weekly review; plan Week 3
+  Carry-overs: verify 20 codes against CMS list; `.env.example` placeholders
+
+## Next small step (Mon Nov 9)
+
+- Start Docker Desktop, `docker compose up -d`, `pnpm dev`; confirm `/health`
+- Compare migration tools (node-pg-migrate vs. others) — pick one in 20 min, write why here
