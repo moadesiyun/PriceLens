@@ -2,11 +2,19 @@
 
 ## Problem
 
-*The American Healthcare industry is a trillon dollars, yet the patients seem to pay the most for least beenefit. People need more transparency into the cost for their hospital visits.
+Hospital prices vary widely, and since 2021 every US hospital must publish its prices
+in a machine-readable file. In practice these files are hard to use: some are several GB,
+the CMS template comes in three formats and keeps changing, and many files have missing
+or invalid fields. Compliance analysts need to know whether their file passes before CMS
+reviews it, and pricing analysts need to know which files they can trust before comparing.
 
 ## Users
 
-_2–3 types of user, e.g. a revenue-cycle/compliance analyst checking a file; a patient comparing prices._
+- **Primary: hospital compliance / revenue-cycle analyst** — checks the hospital's
+  price file against the CMS template before publishing, and fixes problems early.
+- **Secondary: pricing or health data analyst** — compares negotiated and cash prices
+  for common services across hospitals.
+- Not in Phase 1: patients (needs a consumer-grade interface; future idea).
 
 ## In scope (Phase 1)
 
@@ -17,7 +25,10 @@ _2–3 types of user, e.g. a revenue-cycle/compliance analyst checking a file; a
 
 ## Out of scope (Phase 1)
 
-_What you are deliberately NOT building, e.g. all 70 shoppable services, insurance estimates, user accounts, cloud hosting (Phase 2)._
+- All 70 shoppable services (Phase 1 uses 20)
+- Insurance estimates and plan comparison
+- Patient or user accounts
+- Cloud hosting (Phase 2: AWS)
 
 ## Data
 
@@ -52,3 +63,10 @@ _What you are deliberately NOT building, e.g. all 70 shoppable services, insuran
 ## Disclaimer
 
 Prices are shown as published by each hospital. PriceLens is a study project, not medical or financial advice.
+
+## Similar tools
+
+CMS Online/CLI Validator (free, format checks); Turquoise Health (commercial compliance,
+scorecard and benchmarking); PriceTransparency.io (comparison + A–F grade).
+PriceLens is a study project. Its focus: plain-English explanations of each problem,
+and [your pick: version-to-version changes / open-source streaming engine].
