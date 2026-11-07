@@ -59,3 +59,29 @@ standard_charge|min / max; standard_charge|methodology
 - every row: description, at least one code + type, setting
 - when the rate is a percentage/algorithm: allowed-amount fields filled
 - no zero/negative prices; min ≤ max; 10th ≤ median ≤ 90th
+
+## Sat Nov 7 — in progress
+
+Missed Wed/Thu; caught up in Saturday's block.
+
+**Done**
+
+- CMS v3.0.0 samples downloaded to `data/samples` (tall, wide, JSON); field list written above
+- `docs/spec.md`: problem, users, scope, data, 20 target services, similar tools, disclaimer
+- `pnpm format:check` and `pnpm build` pass
+
+**Decisions**
+
+- **Primary user = hospital compliance / revenue-cycle analyst;** secondary = pricing/health
+  data analyst; patients out of scope. Why: matches the compliance angle and the healthcare
+  data roles I'm targeting.
+- **PriceLens is a study project in a market that already exists** (CMS validator, Turquoise
+  Health, PriceTransparency.io). Differentiate on engineering and clear explanations, not novelty.
+- **20 services:** 5 imaging, 5 labs, 4 visits, 6 procedures (CPT + MS-DRG). Codes to be
+  checked against the CMS 70 shoppable services list.
+- **TypeScript 7 + 6 side by side (apps/web):** `typescript` → TS 6.0 (alias of
+  `@typescript/typescript6`) so ESLint/Vite get the compiler API; `@typescript/native` → TS 7.0
+  for `tsc`. Why: typescript-eslint crashes on TS 7.0, which has no API until 7.1.
+  Undo when typescript-eslint supports TS 7.1+ (track typescript-eslint issue #10940).
+  Repeat in apps/api when ESLint is added there.
+- **Schedule:** Vitest + `/health` test moved to Sun (optional) or Mon Nov
