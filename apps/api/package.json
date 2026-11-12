@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "migrate": "node-pg-migrate --envPath ../../.env -m ../../db/migrations",
+    "migrate": "dotenv -e ../../.env -- node-pg-migrate -m ../../db/migrations",
     "migrate:create": "pnpm migrate create"
   },
   "keywords": [],
@@ -22,6 +22,8 @@
   "devDependencies": {
     "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",
+    "dotenv-cli": "^11.1.0",
+    "node-pg-migrate": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "~7.0.2",
     "vitest": "^5.1.0"
