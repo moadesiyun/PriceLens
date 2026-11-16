@@ -113,3 +113,62 @@ Done when: schema migrated, 10 practice queries saved.
 
 - Start Docker Desktop, `docker compose up -d`, `pnpm dev`; confirm `/health`
 - Compare migration tools (node-pg-migrate vs. others) — pick one in 20 min, write why here
+
+## Week 2: Data model and SQL (Nov 9–15)
+
+### Mon Nov 9
+
+Missed. Made up on Wed (make up within the same week; don't shift the schedule).
+
+### Wed Nov 11 (~2 hrs, catch-up build)
+
+Done:
+
+- Reset the repo to a clean state: reverted the earlier node-pg-migrate commits. GitHub history has a duplicate revert + merge (harmless). Laptop and origin/main in sync.
+- `apps/api` dev dependencies: node-pg-migrate 9.0.0, dotenv-cli 11.1.0.
+- Script: `"migrate": "dotenv -e ../../.env -- node-pg-migrate -m ../../db/migrations"`.
+- First migration `db/migrations/<timestamp>_init-schema.sql` (plain SQL):
+  `hospitals`, `price_files`, `services` (unique code + code_type), `charges` (gross, cash, payer/plan,
+  negotiated $/%/algorithm, methodology, min/max, 2026 allowed-amount median/p10/p90/count);
+  indexes on `charges(service_id)` and `charges(price_file_id)`.
+- Tested up → down → up: clean.
+- `.vscode/settings.json`: format-on-save off for SQL.
+- Added `docs/commands.md` (command cheat sheet).
+
+Decisions:
+
+- **Migrations: node-pg-migrate with plain SQL files.** Sits on the `pg` package already in use; every table is SQL I wrote (Week 2 goal). No ORM for now; row types written by hand (maybe Kysely later).
+- **Load `.env` with dotenv-cli** in the script; `--envPath` didn't work. CI will use a separate `migrate:ci` script without dotenv.
+- **Migrations live at the repo root** (`db/migrations`), not inside `apps/api`.
+
+Gotchas:
+
+- `pnpm add` at the root needs `-w`; run app packages inside the app folder. A root removal broke `apps/web` ESLint until `pnpm install`.
+- A VS Code SQL formatter rewrote the migration on save and added invalid `FOREIGN KEY` text inside column lines. Save without formatting: Ctrl+K, then S.
+- Column-level foreign key = `REFERENCES table (id)` only; `FOREIGN KEY (col) REFERENCES …` goes on its own line at the end of the table.
+- Pushed commit → `git revert`, not reset. Pager `:` → press `q`.
+
+Next small step (Thu):
+
+- Migration `seed-target-services`: insert the 20 services from `docs/spec.md`.
+- `db/dev-seed.sql`: 3 made-up hospitals, ~30 charges, including a zero, a negative, a missing cash price and missing allowed-amount fields.
+- `db/practice.sql`: start the 10 queries (WHERE/JOIN first).
+
+Still open for Week 2:
+
+- Thu: 10 practice queries.
+- Sat: Postgres container in CI + `migrate:ci`; ESLint for the API; Week 3 reading (CMS tall layout, csv-parse streaming, Node streams); check the 20 codes against the CMS list; `.env.example` placeholders.
+  Run `pnpm format` before you commit, then commit `docs/notes.md` together with `docs/commands.md`.
+
+## Thu, Nov 12
+
+- Done: migration `seed-target-services` (20 services: 5 imaging, 5 lab, 4 visit, 6 procedure); up/down/up clean.
+- Done: `db/dev-seed.sql`: 3 fake hospitals, 30 charges, deliberate bad values (zero cash, negative negotiated, missing cash, missing allowed amounts). Re-runnable.
+- Gotcha: visit codes were first tagged `procedure`; fixed before pushing. After a migration is pushed, fix it with a new migration instead of editing it.
+- psql: docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+- Run a file: Get-Content db/dev-seed.sql | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+
+## Next small step (Fri, Nov 13)
+
+- `db/practice.sql` queries 1–3: Q1 = 6 rows; Q2 = Bayou 950, Cypress 700, Gulf 1200; Q3 avg for 45378 = 1800 (AVG skips NULLs).
+- Then queries 4–10, commit, `pnpm check`, push.

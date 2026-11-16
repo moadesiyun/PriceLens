@@ -1,0 +1,68 @@
+# SQL cheat sheet (Postgres)
+
+## Order a query is written vs. run
+Written:  SELECT … FROM … JOIN … WHERE … GROUP BY … HAVING … ORDER BY … LIMIT
+Run:      FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT
+(So WHERE can't use a SELECT alias, but ORDER BY can.)
+
+## Basics
+SELECT code, description FROM services WHERE category = 'lab' ORDER BY code;
+WHERE x IS NULL        -- never "= NULL"
+WHERE code IN ('70450', '80053')
+WHERE description ILIKE '%mri%'   -- case-insensitive match
+SELECT DISTINCT payer_name FROM charges;
+
+## JOINs
+FROM charges c
+JOIN services s     ON s.id = c.service_id        -- INNER: only matching rows
+JOIN price_files pf ON pf.id = c.price_file_id
+JOIN hospitals h    ON h.id = pf.hospital_id
+LEFT JOIN: keep every row from the left table, NULLs where there's no match.
+"Rows with no match": LEFT JOIN … WHERE right_table.id IS NULL
+
+## Aggregates + GROUP BY
+SELECT category, COUNT(*), MIN(x), MAX(x), ROUND(AVG(x), 2)
+FROM … GROUP BY category;
+- Every non-aggregated SELECT column must be in GROUP BY.
+- Aggregates skip NULLs (COUNT(*) counts rows; COUNT(col) counts non-NULLs).
+- COUNT(DISTINCT payer_name) counts unique values.
+- HAVING filters groups:  HAVING COUNT(*) > 2
+
+## Conditional logic
+CASE WHEN discounted_cash IS NULL THEN 'missing'
+     WHEN discounted_cash <= 0     THEN 'bad'
+     ELSE 'ok' END AS cash_status
+COUNT(*) FILTER (WHERE negotiated_dollar < 0)   -- count only matching rows
+COALESCE(discounted_cash, 0)                    -- first non-NULL value
+
+## Window functions (compute per row; rows aren't collapsed)
+RANK()       OVER (PARTITION BY service_id ORDER BY discounted_cash)
+ROW_NUMBER() OVER (PARTITION BY … ORDER BY …)   -- no ties
+AVG(x)       OVER (PARTITION BY service_id)     -- group avg next to each row
+PARTITION BY = restart per group; ORDER BY = order within the group.
+You can't filter a window function in WHERE; wrap it in a CTE or subquery.
+
+## Percentiles
+percentile_cont(0.5) WITHIN GROUP (ORDER BY negotiated_dollar)  -- median
+percentile_cont(0.9) …   -- 90th percentile
+
+## CTEs (named sub-steps)
+WITH ranked AS (
+  SELECT …, RANK() OVER (…) AS rnk FROM …
+)
+SELECT * FROM ranked WHERE rnk = 1;
+
+## Performance
+EXPLAIN ANALYZE <query>;
+- Seq Scan = reads the whole table; Index Scan / Bitmap Index Scan = uses an index.
+- On tiny tables Postgres often picks Seq Scan even with an index; that's normal.
+
+## Gotchas
+- Strings use 'single quotes'; "double quotes" are for identifiers.
+- NULL compared to anything is NULL (not true or false).
+- Integer division: 7/2 = 3; use 7/2.0 or ::numeric.
+- Duplicate rows from a JOIN usually mean a one-to-many join; check your keys.
+
+## psql
+\dt  tables   \d name  columns   \pset pager off   \x  expanded rows
+\i file.sql  run a file   \timing  show query time   \q  quit
