@@ -112,7 +112,8 @@ FROM (
     CASE WHEN c.negotiated_dollar IS NULL AND c.negotiated_pct IS NULL THEN 'missing negotiated' END,   -- negotiated check
     CASE WHEN c.allowed_median IS NULL THEN 'missing allowed median' END,    -- allowed amounts check(s)
     CASE WHEN c.allowed_p10 IS NULL THEN 'missing allowed p10' END,    -- allowed amounts check(s)
-    CASE WHEN c.allowed_p90 IS NULL THEN 'missing allowed p90' END    -- allowed amounts check(s)
+    CASE WHEN c.allowed_p90 IS NULL THEN 'missing allowed p90' END,
+    CASE WHEN c.allowed_count IS NULL THEN 'missing allowed count' END     -- allowed amounts check(s)
 ) AS issues
 FROM charges c
 JOIN services s ON s.id = c.service_id
@@ -120,3 +121,32 @@ JOIN price_files pf ON pf.id = c.price_file_id
 JOIN hospitals h    ON h.id = pf.hospital_id) AS checked
 WHERE issues <> ''
 ORDER BY name, code;
+
+--9 cheapest hospital per services for service
+WITH per_h AS (
+  SELECT DISTINCT h.name, s.description, s.code_type, s.code, c.discounted_cash
+  FROM charges c
+  JOIN services s ON s.id = c.service_id
+  JOIN price_files pf ON pf.id = c.price_file_id
+  JOIN hospitals h ON h.id = pf.hospital_id
+  WHERE c.discounted_cash IS NOT NULL AND c.discounted_cash > 0
+),
+ ranked_hs AS (
+  SELECT *,
+  RANK() OVER (PARTITION BY code, code_type ORDER BY discounted_cash ASC) AS cash_rank
+  FROM per_h
+)
+SELECT *
+FROM ranked_hs
+WHERE cash_rank = 1
+ORDER BY code, code_type
+
+--10 explain analyze
+EXPLAIN ANALYZE
+SELECT DISTINCT h.name, s.code, s.code_type, c.gross_charge, c.discounted_cash
+FROM charges c
+JOIN services s     ON s.id = c.service_id     
+JOIN price_files pf ON pf.id = c.price_file_id
+JOIN hospitals h    ON h.id = pf.hospital_id
+WHERE s.code = '70450' AND s.code_type = 'CPT'
+ORDER BY c.discounted_cash
