@@ -172,3 +172,44 @@ Still open for Week 2:
 
 - `db/practice.sql` queries 1–3: Q1 = 6 rows; Q2 = Bayou 950, Cypress 700, Gulf 1200; Q3 avg for 45378 = 1800 (AVG skips NULLs).
 - Then queries 4–10, commit, `pnpm check`, push.
+
+## Week 2 · Practice queries (Nov 14–16) · SDLC stage: design (data model)
+
+### Biggest takeaways (rewrite in your own words)
+
+- Predict the result before running a query. When the result differs, explain why before changing anything.
+- Know the grain: what does one row of the result stand for? One problem can show up on many rows.
+
+### SQL lessons
+
+1. **Filter on the full key.** A service is unique by `code` + `code_type`, so filter on both, not just `code`.
+2. **Avoid `SELECT *` in joins.** Pick the columns that answer the question, with table aliases (`s.code`, `c.discounted_cash`).
+3. **Gross charge and cash price don't change by payer.** They repeat on every payer row. Use `DISTINCT` to get one row per hospital, not `AVG`.
+4. **`GROUP BY` lists use commas:** `GROUP BY a, b, c`. Not `AND`, not `+`.
+5. **NULL vs. zero.** `AVG` skips `NULL` but counts `0`. `COUNT(*)` counts every row; `COUNT(col)` skips `NULL`s.
+6. **Missing matches:** `LEFT JOIN` keeps every row from the left table. Find "no match" with `WHERE <right table>.id IS NULL`. Test a column that is never NULL in a real row.
+7. **Distinct counts don't add up.** 2 + 3 + 2 distinct payers per hospital, but only 3 payers in total, because payers are shared.
+8. **Window functions keep every row.** `RANK() OVER (PARTITION BY group ORDER BY value)` ranks within each group. `RANK` keeps ties (both get 1); `ROW_NUMBER` hides them.
+9. **Scope:** aliases inside a subquery (`h`, `s`, `c`) don't exist outside it. The outer query only sees the subquery's output columns.
+10. **`WHERE` keeps rows; it doesn't exclude them.** To exclude A or B, write `NOT A AND NOT B` (De Morgan's law). `IS NOT NULL OR != 0` still keeps zeros.
+11. **SQL runs in this order:** FROM/JOIN → WHERE → GROUP BY → SELECT → ORDER BY. So `WHERE` can't use a `SELECT` alias (wrap the query or use a CTE), but `ORDER BY` can.
+12. **CTEs** (`WITH a AS (...), b AS (...)`) are named steps. One `WITH`, steps separated by commas. Easier to read than nested subqueries.
+13. **Data-quality labels:** `concat_ws(', ', CASE ... END, ...)` lists every issue on a row. A `CASE` with no `ELSE` returns NULL, and `concat_ws` skips NULLs.
+14. **`EXPLAIN ANALYZE`:** read it from the most indented line outward. `charges_service_idx` was used. Compare estimated vs. actual rows. `DISTINCT` adds a sort step. Rerun in Week 10 with real data.
+
+### Design decisions
+
+- Missing, zero or negative cash prices are excluded from rankings and medians; Week 5 rules will flag them.
+- Ties for cheapest hospital show both (`RANK`), with no tiebreaker.
+- The allowed-amount checks stay separate (median, p10, p90, count), so a hospital knows which field to fix.
+- Week 5 quality score: count cash issues per hospital + service, and negotiated/allowed issues per payer row.
+
+### Tooling gotchas
+
+- The VS Code PostgreSQL extension is Microsoft's "PostgreSQL" one, not "SQL Server (mssql)". The "pre-login handshake" error means the wrong extension.
+- Port 5433, not 5432. Something else on 5432 rejects the password.
+- Copilot is off for SQL while practicing.
+
+### Next small step
+
+- Add the missing semicolons and the `allowed_count` check in query 8; commit and push; then the CI Postgres service container.
